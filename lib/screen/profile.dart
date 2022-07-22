@@ -7,14 +7,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 class Profile extends StatefulWidget {
-  Profile({Key? key}) : super(key: key);
+  const Profile({Key? key}) : super(key: key);
 
   @override
   State<Profile> createState() => _ProfileState();
 }
 
 class _ProfileState extends State<Profile> {
-  File? userProfile;
+  // File? userProfile;
   String? profileUrl;
   TextEditingController userName = TextEditingController();
 
@@ -23,6 +23,8 @@ class _ProfileState extends State<Profile> {
     Size size = MediaQuery.of(context).size;
     double height = size.height;
     double width = size.width;
+
+    User? currentUser=FirebaseAuth.instance.currentUser;
     return Scaffold(
       backgroundColor: const Color.fromRGBO(118, 125, 232, 1),
       body: Column(
@@ -38,27 +40,27 @@ class _ProfileState extends State<Profile> {
                     await ImagePicker().pickImage(source: ImageSource.gallery);
 
                 if (xfile != null) {
-                  User? user = FirebaseAuth.instance.currentUser;
-                  userProfile = File(xfile.path);
-                  Reference f = FirebaseStorage.instance.ref();
+                  // User? user = FirebaseAuth.instance.currentUser;
+                  File userProfile = File(xfile.path);
                   UploadTask? upoladFile;
+
+                  Reference storageReference = FirebaseStorage.instance.ref();
                   try {
-                    upoladFile = f
+                    upoladFile = storageReference
                         .child('images')
-                        .child(user!.uid)
-                        .putFile(userProfile!);
+                        .child(currentUser!.uid)
+                        .putFile(userProfile);
                   } on FirebaseException catch (e) {
                     print('exception in firebase storage   ->>>>>>>>>>. $e');
                   }
-                  upoladFile!.then((image) async {
-                    profileUrl = await image.ref.getDownloadURL();
-                    setState(() {});
+                  upoladFile!.then((image)  {
+                    // profileUrl = await image.ref.getDownloadURL();
+                    getProfileUrl(image);
                   }).onError((error, stackTrace) {
                     print(
                         'error in profile uploading page -----------------------$error');
                   });
                 }
-                setState(() {});
               },
               child: CircleAvatar(
                 radius: 60,
@@ -77,20 +79,25 @@ class _ProfileState extends State<Profile> {
           const SizedBox(
             height: 50,
           ),
+          //todo how can we change TextField border color
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 10),
             child: TextField(
               controller: userName,
               decoration: InputDecoration(
+                enabledBorder:  OutlineInputBorder(
+                  borderSide:const BorderSide(color: Colors.white,),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                  border:  OutlineInputBorder(
+                    borderSide:const BorderSide(color: Colors.white,),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   label: const Text(
                     'username',
                     style: TextStyle(color: Colors.white),
                   ),
-                  border: OutlineInputBorder(
-                    borderSide:const BorderSide(color: Colors.white),
-                    // borderSide:const BorderSide(color: Colors.green),
-                    borderRadius: BorderRadius.circular(10),
-                  )),
+                  ),
             ),
           ),
           const SizedBox(
@@ -98,10 +105,10 @@ class _ProfileState extends State<Profile> {
           ),
           TextButton(
             onPressed: () {
-              if (userProfile != null && userName.text != '') {
+              if (profileUrl != null && userName.text != '') {
                 FirebaseFirestore.instance
                     .collection('user')
-                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .doc(currentUser!.uid)
                     .update({'image': profileUrl, 'name': userName.text}).then(
                         (value) {
                   Navigator.of(context)
@@ -112,10 +119,9 @@ class _ProfileState extends State<Profile> {
               }
             },
             style: ButtonStyle(
-                side: MaterialStateProperty.all(BorderSide()),
                 splashFactory: InkSplash.splashFactory,
                 shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30))),
+                    borderRadius: BorderRadius.circular(10))),
                 fixedSize:
                     MaterialStateProperty.all(Size(width * 0.8, height * 0.07)),
                 backgroundColor: MaterialStateProperty.all(Colors.white)),
@@ -130,5 +136,12 @@ class _ProfileState extends State<Profile> {
         ],
       ),
     );
+  }
+  Future<String> getProfileUrl(TaskSnapshot snapshot)async {
+    profileUrl = await snapshot.ref.getDownloadURL();
+    setState(() {});
+
+
+    return profileUrl!;
   }
 }

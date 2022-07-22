@@ -1,11 +1,11 @@
-import 'package:chatme/model/User.dart';
-import 'package:chatme/model/chatroom.dart';
-import 'package:chatme/screen/chat.dart';
-import 'package:chatme/screen/login.dart';
-import 'package:chatme/screen/search.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../model/User.dart';
+import '../model/chatroom.dart';
+import '../screen/chat.dart';
+import '../screen/login.dart';
+import '../screen/search.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -28,10 +28,16 @@ class _HomeState extends State<Home> {
             Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_){
               return Login();
             }));
-          },icon: Icon(Icons.logout))
+          },icon:const Icon(Icons.logout))
         ],
       ),
-      //todo change login from here
+
+      /* todo :->  change login from here
+      todo :->   this logic is looking so bad
+      todo :->   how can we make this condition :->
+  todo          if(currentuser.uid==sender  ||  currentuser.uid == reciver)
+
+       */
 
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
@@ -44,14 +50,13 @@ class _HomeState extends State<Home> {
 
             return ListView.builder(
               itemCount: querySnapshot.size,
-              itemBuilder: (_, item) {
+              itemBuilder: (_, index) {
                 Chatroom chatroom =
-                    Chatroom().fromMap(querySnapshot.docs[item].data() as Map);
-                // DocumentSnapshot<Map<String, dynamic>>;
+                    Chatroom().fromMap(querySnapshot.docs[index].data() as Map);
                 String? findusertype;
                 if (currentUser ==
                     chatroom.senderUid) {
-                  findusertype = chatroom.reciverUid as String;
+                  findusertype = chatroom.reciverUid ;
                 } else if(currentUser==chatroom.reciverUid){
                   findusertype = chatroom.senderUid;
                 }
@@ -85,8 +90,18 @@ class _HomeState extends State<Home> {
                             }));
                           },
                         );
-                      } else {
-                        return const Text('No friend Found ');
+                      }
+                      else if(snap.connectionState==ConnectionState.waiting){
+                        return Container(color: Colors.black12,child:const Center(
+                          child: CircularProgressIndicator(),
+                        ),);
+                      }
+                      else if(snap.hasError){
+                        return  Text('error occured ${snap.error} ');
+
+                      }
+                      else {
+                        return const Text('something is happining wrong');
                       }
                     }):Card();
               },
@@ -101,7 +116,7 @@ class _HomeState extends State<Home> {
         child: const Icon(Icons.add),
         onPressed: () {
           Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-            return Search();
+            return const  Search();
           }));
         },
       ),

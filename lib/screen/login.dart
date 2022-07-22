@@ -26,33 +26,12 @@ class Login extends StatelessWidget {
               width: width,
               fit: BoxFit.cover,
             ),
-            Card(
-                elevation: 7,
-                shadowColor: const Color.fromRGBO(118, 125, 232, 1),
-                margin: const EdgeInsets.symmetric(horizontal: 30),
-                child: TextField(
-                  controller: email,
-                  decoration: const InputDecoration(
-                      hintText: '     enter your email',
-                      border: InputBorder.none),
-                )),
+            inputField(email, 'enter your email'),
             const Divider(
-              color: Colors.black,
-              height: 5,
-              thickness: 1,
-              endIndent: 30,
+              color: Colors.black, height: 5, thickness: 1, endIndent: 30,
               indent: 30,
             ),
-            Card(
-              elevation: 7,
-              margin: const EdgeInsets.symmetric(horizontal: 30),
-              shadowColor: const Color.fromRGBO(118, 125, 232, 1),
-              child: TextField(
-                controller: password,
-                decoration: const InputDecoration(
-                    hintText: 'enter your password', border: InputBorder.none),
-              ),
-            ),
+            inputField(password, 'enter your password'),
             SizedBox(
               height: height * 0.1,
             ),
@@ -75,24 +54,11 @@ class Login extends StatelessWidget {
                   backgroundColor: MaterialStateProperty.all(
                     const Color.fromRGBO(118, 125, 232, 1),
                   )),
-              child: Text(
+              child:const Text(
                 'Login',
                 style: TextStyle(color: Colors.white),
               ),
             ),
-            // Container(
-            //   width: width,
-            //   height: height * 0.07,
-            //   margin: const EdgeInsets.symmetric(horizontal: 25),
-            //   decoration: BoxDecoration(
-            //       color: const Color.fromRGBO(118, 125, 232, 1),
-            //       borderRadius: BorderRadius.circular(10)),
-            //   child: const Center(
-            //       child: Text(
-            //     'Login',
-            //     style: TextStyle(color: Colors.white, fontSize: 25),
-            //   )),
-            // ),
             SizedBox(
               height: height * 0.1,
             ),
@@ -102,8 +68,7 @@ class Login extends StatelessWidget {
                 const Text('Don\'t have an account '),
                 InkWell(
                   onTap: () {
-                    print('button pressed ');
-                    Navigator.of(context).push(
+                    Navigator.of(context).pushReplacement(
                       PageRouteBuilder(
                         pageBuilder: (_, animation, secondAnimation) {
                           return SignUp();
@@ -161,29 +126,48 @@ class Login extends StatelessWidget {
 
   void loginUser(BuildContext context) async {
     UserCredential? userCredential;
+    NavigatorState navigatorstate=Navigator.of(context);//todo we are getting this NavigatorState here becuase we should not use BuildContext below the await
     try {
       userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email.text, password: password.text);
     } on FirebaseAuthException catch (e) {
       errorDialog('exception occured', '$e', context);
-    }if(userCredential!=null) {
-      //todo what should we do here
-      Navigator.pushReplacement(
-          context,
+    }
+
+    if(userCredential!=null){
+      navigateToNextScreen(navigatorstate);
+      return;
+    }
+
+  }
+  void navigateToNextScreen(NavigatorState state){
+      state.pushReplacement(
           PageRouteBuilder(
               pageBuilder: (context, animation, secondAnaimtion) {
-                return Home();
+                return const Home();
               },
               transitionDuration: const Duration(seconds: 2),
               transitionsBuilder: (context, animation, secondanimation, child) {
-                Animation<Offset> ani =
+                Animation<Offset> custAnimation =
                 Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
                     .animate(animation);
                 return SlideTransition(
-                  position: ani,
+                  position: custAnimation,
                   child: child,
                 );
               }));
-    }
+
+  }
+  Widget inputField(TextEditingController controller,String hintText){
+    return Card(
+        elevation: 7,
+        shadowColor: const Color.fromRGBO(118, 125, 232, 1),
+        margin: const EdgeInsets.symmetric(horizontal: 30),
+        child: TextField(
+          controller: controller,
+          decoration:  InputDecoration(
+              hintText: hintText,
+              border: InputBorder.none),
+        ));
   }
 }

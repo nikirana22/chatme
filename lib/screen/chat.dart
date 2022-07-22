@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../model/User.dart';
 
-Uuid uuid = Uuid();
+Uuid uuid =  Uuid();
 
 class Chat extends StatelessWidget {
   Fuser ricever;

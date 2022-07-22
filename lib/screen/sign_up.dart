@@ -1,40 +1,49 @@
 import 'package:chatme/model/User.dart';
+import 'package:chatme/screen/login.dart';
 import 'package:chatme/screen/profile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+//   //todo should we make this class as Statefull only for password -> obscureText or we can apply some other method
 
 class SignUp extends StatelessWidget {
   SignUp({Key? key}) : super(key: key);
   final TextEditingController email = TextEditingController();
   final TextEditingController password = TextEditingController();
   final TextEditingController confPassword = TextEditingController();
-  bool hidePassword = false;
 
+  // bool hidePassword = false;
+  //todo what should we do for hide and show password
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     double height = size.height;
     double width = size.width;
     return Scaffold(
-      // appBar: AppBar(),
+        // appBar: AppBar(),
         body: SafeArea(
       child: SingleChildScrollView(
         child: Column(
           children: [
-            Stack(children: [
-        SvgPicture.asset(
-          'assets/images/signup.svg',
-          height: height * 0.47,
-          width: width,
-          fit: BoxFit.fitWidth,
-        ),            IconButton(onPressed: (){
-                Navigator.of(context).pop();
-              }, icon:const Icon(Icons.arrow_back,color: Colors.white,))
-
-            ],),
-
+            // Stack(
+            //   children: [
+                SvgPicture.asset(
+                  'assets/images/signup.svg',
+                  height: height * 0.47,
+                  width: width,
+                  fit: BoxFit.fitWidth,
+                ),
+            //     IconButton(
+            //         onPressed: () {
+            //           Navigator.of(context).pop();
+            //         },
+            //         icon: const Icon(
+            //           Icons.arrow_back,
+            //           color: Colors.white,
+            //         ))
+            //   ],
+            // ),
             Card(
                 elevation: 7,
                 shadowColor: const Color.fromRGBO(118, 125, 232, 1),
@@ -43,56 +52,11 @@ class SignUp extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Column(
                     children: [
-                      TextField(
-                        controller: email,
-                        decoration: const InputDecoration(
-                            label: Text(
-                              'enter your email',
-                              style: TextStyle(color: Colors.black54),
-                            ),
-                            border: InputBorder.none),
-                      ),
-                      const Divider(
-                        color: Colors.black,
-                        height: 5,
-                        thickness: 1,
-                        endIndent: 20,
-                        indent: 20,
-                      ),
-                      TextField(
-                        // obscureText: true,
-                        controller: password,
-                        decoration: const InputDecoration(
-                            label: Text(
-                              'enter your password',
-                              style: TextStyle(color: Colors.black54),
-                            ),
-                            border: InputBorder.none),
-                      ),
-                      const Divider(
-                        color: Colors.black,
-                        height: 5,
-                        thickness: 1,
-                        endIndent: 20,
-                        indent: 20,
-                      ),
-                      TextField(
-                        // obscureText: true,
-                        controller: confPassword,
-                        //todo should we make this class as Statefull only for password -> obscureText or we can apply some other method
-                        decoration: InputDecoration(
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.remove_red_eye),
-                              onPressed: () {
-                                hidePassword = !hidePassword;
-                              },
-                            ),
-                            label: const Text(
-                              'conform password',
-                              style: TextStyle(color: Colors.black54),
-                            ),
-                            border: InputBorder.none),
-                      )
+                     textField(email, 'enter your email'),
+                      divider(),
+                      textField(password,  'enter your password'),
+                     divider(),
+                      textField(confPassword, 'conform password'),
                     ],
                   ),
                 )),
@@ -134,14 +98,20 @@ class SignUp extends StatelessWidget {
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Text('Already have an account '),
-                Text(
-                  '  Login up',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color:
-                    Color.fromRGBO(118, 125, 232, 1),
+              children: [
+                const Text('Already have an account '),
+                TextButton(
+                  onPressed: (){
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_){
+                      return Login();
+                    }));
+                  },
+                  child:const Text(
+                    ' Login up',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Color.fromRGBO(118, 125, 232, 1),
+                    ),
                   ),
                 )
               ],
@@ -152,6 +122,19 @@ class SignUp extends StatelessWidget {
     ));
   }
 
+  Widget textField(TextEditingController controller,String labelText){
+    return  TextField(
+      controller: controller,
+      decoration:  InputDecoration(
+          label: Text(
+            labelText,
+            style:const TextStyle(color: Colors.black54),
+          ),
+          border: InputBorder.none),
+    );
+  }
+
+  //todo we are using this same method in many class so we
   void errorDialog(String title, String content, BuildContext context) {
     showDialog(
         context: context,
@@ -169,42 +152,44 @@ class SignUp extends StatelessWidget {
           );
         });
   }
+  Widget divider(){
+    return  const Divider(
+      color: Colors.black,
+      height: 5,
+      thickness: 1,
+      endIndent: 20,indent: 20,);
+  }
 
   void createUser(BuildContext context) async {
-    //todo which one is better way
-    // todo :->  1. should we put these all three varialbe in method parameter
-    //todo :->  2. or this is correct here
     String userEmail = email.text.trim();
     String userPassword = password.text.trim();
     UserCredential? userCredential;
-    // try {
-    //   userCredential = await FirebaseAuth.instance
-    //       .createUserWithEmailAndPassword(
-    //           email: userEmail, password: userPassword);
-    // } on FirebaseAuthException catch (e) {
-    //   log('error in userCredential $e');
-    // }//todo how can we change this
+    NavigatorState navigatorState=Navigator.of(context);
     try {
-      userCredential =
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: userEmail, password: userPassword);
-    }on FirebaseAuthException catch (e){
+      userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+              email: userEmail, password: userPassword);
+    } on FirebaseAuthException catch (e) {
       errorDialog('error occure in auth ', '$e', context);
     }
     if (userCredential != null) {
-      Fuser user=Fuser(email: userCredential.user!.email,uid: userCredential.user!.uid,name: '',image: 'x`');
-      FirebaseFirestore.instance.collection('user').doc(user.uid).set(user.toMap());
-         goToLogin(context);
-    }
-    else{
-      print('come in else statement  -------------------------------- ${userCredential!.user! .email}');
+      Fuser user = Fuser(
+          email: userCredential.user!.email,
+          uid: userCredential.user!.uid,
+          name: '',
+          image: '');
+      FirebaseFirestore.instance
+          .collection('user')
+          .doc(user.uid)
+          .set(user.toMap());
+      completeProile(navigatorState);
+      return;
     }
   }
 
-  goToLogin(BuildContext context) {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_){
-      return Profile();
+  void completeProile(NavigatorState navigatorState) {
+    navigatorState.pushReplacement(MaterialPageRoute(builder: (_) {
+      return const Profile();
     }));
-
   }
 }
